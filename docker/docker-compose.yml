@@ -1,0 +1,42 @@
+# ─────────────────────────────────────────────────────────────────────────
+# Sentinel — Docker Compose example
+#
+# Start:   docker compose -f docker/docker-compose.yml up
+# Check:   docker compose exec sentinel sentinel status
+# Run:     docker compose exec sentinel sentinel run --model-dir /models './run.sh'
+# ─────────────────────────────────────────────────────────────────────────
+
+services:
+  sentinel:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: ghcr.io/model-integrity-cli/sentinel:latest
+    container_name: sentinel
+    hostname: sentinel
+    # Mount model directories to monitor
+    volumes:
+      - ./models:/models:ro
+      - sentinel-data:/home/sentinel/.sentinel
+    # Give access to host system state (for /etc, /proc monitoring)
+    pid: host
+    network_mode: host
+    cap_add:
+      - SYS_PTRACE
+    # By default, just check status
+    command: ["status"]
+
+  # Uncomment for daemon mode:
+  # sentinel-daemon:
+  #   image: ghcr.io/model-integrity-cli/sentinel:latest
+  #   container_name: sentinel-daemon
+  #   pid: host
+  #   network_mode: host
+  #   cap_add:
+  #     - SYS_PTRACE
+  #   volumes:
+  #     - sentinel-data:/home/sentinel/.sentinel
+  #   command: ["daemon", "start", "--interval", "3600"]
+
+volumes:
+  sentinel-data:
